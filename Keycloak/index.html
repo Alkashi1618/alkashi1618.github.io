@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Keycloak - Système d'Authentification Centralisée</title>
+    <title>Mise en place de Keycloak - Authentification Centralisée SSO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,169 +14,194 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.8;
             color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background: #f8f9fa;
         }
 
-        .container {
-            max-width: 1100px;
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar .container {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-
-        header h1 {
-            color: #667eea;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        header .subtitle {
-            color: #666;
-            font-size: 1.2em;
-            margin-bottom: 20px;
-        }
-
-        .meta-info {
+            padding: 0 20px;
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 20px;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .meta-badge {
-            background: #f0f0f0;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            color: #555;
+        .navbar a {
+            color: #1e3c72;
+            text-decoration: none;
             font-weight: 600;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .meta-badge.type {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .navbar a:hover {
+            color: #0BCEAF;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
+            padding: 80px 20px 60px;
+            text-align: center;
         }
 
-        .content-section {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
             margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
 
-        h2 {
-            color: #667eea;
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: white;
+            color: #1e3c72;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        /* Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .content {
+            background: white;
+            margin: -40px auto 50px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .section {
+            padding: 50px;
+        }
+
+        .section:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .section h2 {
+            color: #1e3c72;
             font-size: 2em;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #0BCEAF;
         }
 
-        h3 {
-            color: #764ba2;
+        .section h3 {
+            color: #2a5298;
             font-size: 1.5em;
             margin-top: 30px;
             margin-bottom: 15px;
         }
 
-        h4 {
-            color: #555;
+        .section h4 {
+            color: #1e3c72;
             font-size: 1.2em;
             margin-top: 20px;
             margin-bottom: 10px;
         }
 
-        p {
+        .section p, .section li {
             margin-bottom: 15px;
             text-align: justify;
         }
 
-        ul, ol {
+        .section ul, .section ol {
             margin-left: 30px;
             margin-bottom: 20px;
         }
 
-        li {
-            margin-bottom: 10px;
-        }
-
+        /* Code Block */
         .code-block {
             background: #2d2d2d;
             color: #f8f8f2;
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow-x: auto;
             margin: 20px 0;
             font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-size: 0.95em;
         }
 
-        .highlight {
-            background: #fff3cd;
-            padding: 20px;
-            border-left: 4px solid #ffc107;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-
+        /* Info Boxes */
         .info-box {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
             padding: 20px;
-            border-radius: 5px;
             margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
         }
 
         .success-box {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
+            background: #e8f5e9;
+            border-left: 5px solid #4caf50;
             padding: 20px;
-            border-radius: 5px;
             margin: 20px 0;
+            border-radius: 5px;
         }
 
-        .steps {
-            counter-reset: step-counter;
-            list-style: none;
-            margin-left: 0;
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
         }
 
-        .steps li {
-            counter-increment: step-counter;
-            padding-left: 50px;
-            position: relative;
-            margin-bottom: 25px;
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .steps li::before {
-            content: counter(step-counter);
-            position: absolute;
-            left: 0;
-            top: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+        .card h4 {
+            color: #1e3c72;
+            margin-bottom: 15px;
         }
 
+        /* Tech Stack */
         .tech-stack {
             display: flex;
             flex-wrap: wrap;
@@ -185,305 +212,391 @@
         .tech-tag {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 8px 20px;
+            padding: 8px 18px;
             border-radius: 20px;
+            font-weight: 600;
             font-size: 0.9em;
-            font-weight: 600;
         }
 
-        .back-button {
-            display: inline-block;
-            background: white;
-            color: #667eea;
-            padding: 12px 30px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .back-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        }
-
+        /* Footer */
         footer {
-            text-align: center;
+            background: #1e3c72;
             color: white;
-            padding: 30px;
-            opacity: 0.9;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
         }
 
+        footer a {
+            color: #0BCEAF;
+            text-decoration: none;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8em;
+            .hero h1 {
+                font-size: 2em;
             }
-
-            .content-section {
-                padding: 25px;
-            }
-
-            .meta-info {
-                flex-direction: column;
+            .section {
+                padding: 30px 20px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html#portfolio">
+                <i class="fas fa-arrow-left"></i> Retour au Portfolio
+            </a>
+            <a href="https://github.com/alkashi1618" target="_blank">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero">
+        <h1>🔐 Système d'Authentification Centralisée avec Keycloak</h1>
+        <p class="subtitle">Mise en place d'un SSO sécurisé avec OAuth2 & OpenID Connect</p>
+        <div class="badges">
+            <span class="badge">Lab Pratique</span>
+            <span class="badge">Keycloak 24.0.3</span>
+            <span class="badge">OAuth2 / OIDC</span>
+            <span class="badge">Docker</span>
+        </div>
+    </div>
+
+    <!-- Content -->
     <div class="container">
-        <a href="../index.html" class="back-button">← Retour au portfolio</a>
-
-        <header>
-            <h1>🔐 Mise en place d'un système d'authentification centralisée avec Keycloak</h1>
-            <p class="subtitle">Single Sign-On (SSO) avec OAuth2 et OpenID Connect</p>
+        <div class="content">
             
-            <div class="meta-info">
-                <span class="meta-badge type">LAB</span>
-                <span class="meta-badge">🏢 Sécurité & Authentification</span>
-                <span class="meta-badge">⏱️ Durée: 4-6 heures</span>
-            </div>
+            <!-- Introduction -->
+            <section class="section">
+                <h2>📋 Introduction</h2>
+                <p>Dans le cadre de la sécurisation et de la centralisation de l'accès aux différentes applications internes, ce laboratoire vise à mettre en place une solution d'authentification unifiée basée sur <strong>Keycloak</strong>. L'objectif est de comprendre le fonctionnement d'un système <strong>SSO (Single Sign-On)</strong> avec les protocoles <strong>OAuth2</strong> et <strong>OpenID Connect</strong>.</p>
+                
+                <div class="info-box">
+                    <strong>🎯 Objectif du TP</strong><br>
+                    Mettre en place un système d'authentification centralisé permettant aux différentes applications web de déléguer l'authentification à un serveur Keycloak. Comprendre les rôles OAuth2, les flux de connexion sécurisés (Authorization Code + PKCE) et la gestion des utilisateurs, rôles et clients.
+                </div>
+            </section>
 
-            <div class="tech-stack">
-                <span class="tech-tag">Keycloak</span>
-                <span class="tech-tag">Docker</span>
-                <span class="tech-tag">OAuth2</span>
-                <span class="tech-tag">OpenID Connect</span>
-                <span class="tech-tag">JWT</span>
-                <span class="tech-tag">Node.js</span>
-            </div>
-        </header>
-
-        <div class="content-section">
-            <h2>📋 Introduction</h2>
-            <p>
-                Dans le cadre de la sécurisation et de la centralisation de l'accès aux différentes applications internes, 
-                l'entreprise souhaite mettre en place une solution d'authentification unifiée basée sur Keycloak. 
-                Ce TP vise à comprendre le fonctionnement d'un système SSO (Single Sign-On) avec OAuth2 et OpenID Connect.
-            </p>
-        </div>
-
-        <div class="content-section">
-            <h2>🎯 Objectif</h2>
-            <p>
-                Mettre en place un système d'authentification centralisé permettant aux différentes applications web de l'entreprise 
-                de déléguer l'authentification à un serveur Keycloak. L'objectif est de comprendre les rôles OAuth2, les flux de 
-                connexion sécurisés (Authorization Code + PKCE) et la gestion des utilisateurs, rôles et clients.
-            </p>
-        </div>
-
-        <div class="content-section">
-            <h2>🚀 Partie 1 – Installation de Keycloak</h2>
-            
-            <div class="info-box">
-                <strong>📦 Installation via Docker</strong>
-                <p>Keycloak peut être rapidement déployé en utilisant Docker pour un environnement de développement.</p>
-            </div>
-
-            <div class="code-block">docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin \
+            <!-- Installation -->
+            <section class="section">
+                <h2>⚙️ Partie 1 – Installation de Keycloak</h2>
+                
+                <h3>Installation via Docker</h3>
+                <p>Keycloak peut être déployé rapidement grâce à Docker. Cette méthode permet une mise en place rapide pour des environnements de développement ou de test.</p>
+                
+                <div class="code-block">docker run -p 8080:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
   quay.io/keycloak/keycloak:24.0.3 start-dev</div>
 
-            <p>Une fois lancé, Keycloak est accessible à l'adresse : <strong>http://localhost:8080</strong></p>
-        </div>
+                <div class="warning-box">
+                    <strong>⚠️ Note importante :</strong> Cette commande lance Keycloak en mode développement. Pour la production, une configuration plus robuste avec base de données externe est recommandée.
+                </div>
 
-        <div class="content-section">
-            <h2>⚙️ Partie 2 – Configuration de Keycloak</h2>
-            
-            <ol class="steps">
-                <li>
-                    <strong>Création du Realm 'tdsi'</strong>
-                    <p>Un realm est un espace isolé pour gérer utilisateurs, rôles et applications. Chaque realm représente un périmètre de sécurité distinct.</p>
-                </li>
-                <li>
-                    <strong>Création des utilisateurs Alice et Bob</strong>
-                    <p>Ajout de comptes utilisateurs avec définition des mots de passe et configuration des actions requises (OTP, WebAuthn, vérification email, etc.).</p>
-                </li>
-                <li>
-                    <strong>Attribution des rôles 'user' et 'admin'</strong>
-                    <p>Affectation des rôles aux utilisateurs pour gérer les accès aux différentes ressources et fonctionnalités.</p>
-                </li>
-            </ol>
-        </div>
+                <p>Une fois démarré, Keycloak est accessible à l'adresse : <code>http://localhost:8080</code></p>
+            </section>
 
-        <div class="content-section">
-            <h2>🔌 Partie 3 – Création et configuration des clients</h2>
-            
-            <p>Deux types de clients sont créés pour illustrer différents cas d'usage :</p>
-
-            <h3>1. Client Backend (Confidential)</h3>
-            <div class="highlight">
-                <strong>backend-api</strong>
-                <ul>
-                    <li>Type : Confidential</li>
-                    <li>Service Accounts Enabled : ON</li>
-                    <li>Peut stocker un client_secret de manière sécurisée</li>
-                    <li>Idéal pour les APIs et serveurs backend</li>
-                </ul>
-            </div>
-
-            <h3>2. Client Mobile (Public)</h3>
-            <div class="highlight">
-                <strong>mobile-app</strong>
-                <ul>
-                    <li>Type : Public</li>
-                    <li>Standard Flow + PKCE activé</li>
-                    <li>Ne peut pas garder de secret côté client</li>
-                    <li>Adapté pour les applications mobiles et SPA</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="content-section">
-            <h2>🧪 Partie 4 – Test de l'authentification</h2>
-            
-            <ol class="steps">
-                <li>
-                    <strong>Lancer l'API Node.js sécurisée par Keycloak</strong>
-                    <p>Configuration d'une API backend protégée qui valide les tokens JWT émis par Keycloak.</p>
-                </li>
-                <li>
-                    <strong>Tester avec Postman (Authorization Code + PKCE)</strong>
-                    <p>Simulation du flux d'authentification OAuth2 avec PKCE pour sécuriser les échanges.</p>
-                </li>
-                <li>
-                    <strong>Appeler l'API protégée</strong>
-                    <p>Utilisation du token d'accès pour effectuer des requêtes vers les endpoints sécurisés.</p>
-                </li>
-            </ol>
-        </div>
-
-        <div class="content-section">
-            <h2>🔍 Partie 5 – Analyse et compréhension</h2>
-
-            <h3>1. Différence entre OAuth2 et OpenID Connect</h3>
-            <div class="info-box">
-                <p><strong>OAuth2</strong> est un protocole d'<em>autorisation</em> permettant à une application d'accéder à des ressources 
-                sans transmettre le mot de passe utilisateur, via un <strong>access token</strong> (jeton d'accès).</p>
+            <!-- Configuration -->
+            <section class="section">
+                <h2>🔧 Partie 2 – Configuration de Keycloak</h2>
                 
-                <p><strong>OpenID Connect (OIDC)</strong> ajoute une couche d'<em>authentification</em> sur OAuth2. Il émet un 
-                <strong>id_token</strong> (souvent un JWT) contenant des informations sur l'identité de l'utilisateur, permettant 
-                à l'application de s'assurer de qui est connecté, en plus de contrôler les accès.</p>
-            </div>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>Étape 1 : Création du Realm</h4>
+                        <p>Un <strong>Realm</strong> est un espace isolé pour gérer utilisateurs, rôles et applications.</p>
+                        <ul>
+                            <li>Nom du realm : <code>tdsi</code></li>
+                            <li>Isolement complet des configurations</li>
+                            <li>Gestion indépendante des utilisateurs</li>
+                        </ul>
+                    </div>
 
-            <h3>2. Que contient un JWT</h3>
-            <p>Un JWT (JSON Web Token) est formé de trois parties :</p>
-            <ul>
-                <li><strong>Header :</strong> Spécifie l'algorithme de signature et le type du jeton.</li>
-                <li><strong>Payload :</strong> Contient les claims, c'est-à-dire les données sur l'utilisateur, ses autorisations, ses rôles, etc.</li>
-                <li><strong>Signature :</strong> Permet de valider l'intégrité du jeton (qu'il n'a pas été modifié).</li>
-            </ul>
+                    <div class="card">
+                        <h4>Étape 2 : Création des utilisateurs</h4>
+                        <p>Configuration de comptes utilisateurs pour tester l'authentification.</p>
+                        <ul>
+                            <li><strong>Alice</strong> : Utilisateur standard</li>
+                            <li><strong>Bob</strong> : Utilisateur avec privilèges</li>
+                            <li>Définition des mots de passe</li>
+                        </ul>
+                    </div>
+                </div>
 
-            <h3>3. Comment Keycloak vérifie les permissions</h3>
-            <p>
-                Keycloak attribue à chaque utilisateur authentifié un JWT (access_token) contenant ses rôles et permissions, 
-                correspondant à ce qui est défini dans le realm et au niveau des clients.
-            </p>
-            <p>
-                Les applications ou APIs consultent ce token pour déterminer si l'utilisateur possède les droits suffisants 
-                pour accéder à une ressource ou fonctionnalité précise, en se basant sur les rôles et claims du token. 
-                La vérification se fait donc via décodage et inspection du contenu du JWT, qui sert de preuve d'identité et d'autorisation.
-            </p>
-        </div>
-
-        <div class="content-section">
-            <h2>📚 Résumé : Keycloak en détail</h2>
-
-            <h3>1️⃣ Keycloak – C'est quoi ?</h3>
-            <p>
-                Keycloak est une solution <strong>open-source</strong> de gestion des identités et des accès 
-                (Identity and Access Management – IAM). Il permet de centraliser l'authentification et l'autorisation 
-                des utilisateurs pour diverses applications web, API ou mobiles, et offre un système de <strong>Single Sign-On (SSO)</strong>.
-            </p>
-
-            <h4>Fonctionnalités principales :</h4>
-            <ul>
-                <li><strong>Authentification centralisée :</strong> les utilisateurs se connectent une seule fois pour accéder à plusieurs applications</li>
-                <li><strong>Gestion des utilisateurs :</strong> création, modification, suppression d'utilisateurs, gestion des rôles et groupes</li>
-                <li><strong>Protocoles standards supportés :</strong> OAuth2, OpenID Connect (OIDC), SAML 2.0</li>
-                <li><strong>Gestion des rôles et permissions :</strong> contrôle fin d'accès aux ressources</li>
-                <li><strong>Sécurité renforcée :</strong> support de 2FA, WebAuthn (biométrie), OTP, etc.</li>
-                <li><strong>Identité fédérée :</strong> connexion via Google, Facebook, AzureAD, ou d'autres serveurs Keycloak</li>
-                <li><strong>Jetons et tokens :</strong> utilisation de JWT pour sécuriser les échanges entre clients et serveurs</li>
-            </ul>
-
-            <h3>3️⃣ Pourquoi l'utiliser ?</h3>
-            <div class="success-box">
+                <h3>Étape 3 : Attribution des rôles</h3>
+                <p>Les rôles permettent de contrôler finement les accès aux ressources :</p>
                 <ul>
-                    <li>✅ <strong>Centralisation de l'authentification :</strong> Évite de créer un système d'authentification différent pour chaque application</li>
-                    <li>🔒 <strong>Sécurité renforcée :</strong> Mot de passe jamais partagé avec les applications clientes, support de 2FA, WebAuthn, OTP</li>
-                    <li>🎯 <strong>Contrôle fin des permissions :</strong> Rôles et groupes permettent de restreindre l'accès à certaines ressources</li>
-                    <li>🔗 <strong>Interopérabilité :</strong> Supporte OAuth2, OIDC et SAML, facilitant l'intégration avec d'autres systèmes</li>
-                    <li>😊 <strong>Expérience utilisateur améliorée :</strong> SSO - l'utilisateur se connecte une seule fois pour accéder à toutes les applications</li>
-                    <li>📈 <strong>Scalabilité :</strong> Idéal pour les entreprises avec plusieurs applications internes ou microservices</li>
+                    <li><strong>user</strong> : Accès de base aux applications</li>
+                    <li><strong>admin</strong> : Accès administratif complet</li>
                 </ul>
-            </div>
+            </section>
 
-            <h3>4️⃣ Où l'utiliser ?</h3>
-            <ul>
-                <li>Entreprises ayant plusieurs applications internes ou externes</li>
-                <li>Projets nécessitant authentification unique (SSO) pour améliorer la sécurité et l'expérience utilisateur</li>
-                <li>Applications mobiles ou web avec API sécurisées</li>
-                <li>Scénarios où des tiers doivent accéder à des ressources sans partager leurs identifiants</li>
-                <li>Organisations nécessitant rôles, permissions et audit centralisés</li>
-            </ul>
+            <!-- Clients -->
+            <section class="section">
+                <h2>🖥️ Partie 3 – Création et configuration des clients</h2>
+                
+                <p>Dans Keycloak, un <strong>client</strong> représente une application qui souhaite utiliser l'authentification centralisée. Deux types de clients ont été configurés :</p>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>📱 Client : backend-api</h4>
+                        <p><strong>Type :</strong> Confidential</p>
+                        <ul>
+                            <li>Peut stocker un secret sécurisé</li>
+                            <li>Service Accounts Enabled = ON</li>
+                            <li>Utilisé pour les applications serveur</li>
+                            <li>Authentification machine-to-machine</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h4>📱 Client : mobile-app</h4>
+                        <p><strong>Type :</strong> Public</p>
+                        <ul>
+                            <li>Ne peut pas stocker de secret</li>
+                            <li>Standard Flow + PKCE activé</li>
+                            <li>Utilisé pour applications mobiles/SPA</li>
+                            <li>Sécurité renforcée via PKCE</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <strong>✅ PKCE (Proof Key for Code Exchange)</strong><br>
+                    Extension de sécurité pour OAuth2 qui protège contre les attaques d'interception du code d'autorisation, particulièrement importante pour les applications publiques.
+                </div>
+            </section>
+
+            <!-- Tests -->
+            <section class="section">
+                <h2>🧪 Partie 4 – Test de l'authentification</h2>
+                
+                <h3>1. Lancement de l'API Node.js</h3>
+                <p>L'API backend est sécurisée par Keycloak et nécessite un token valide pour accéder aux ressources protégées.</p>
+
+                <h3>2. Test avec Postman (Authorization Code + PKCE)</h3>
+                <p>Le flux Authorization Code avec PKCE se déroule en plusieurs étapes :</p>
+                <ol>
+                    <li>L'application génère un <code>code_verifier</code> et un <code>code_challenge</code></li>
+                    <li>Redirection vers Keycloak pour l'authentification</li>
+                    <li>Keycloak retourne un code d'autorisation</li>
+                    <li>Échange du code contre un access token</li>
+                    <li>Utilisation du token pour accéder aux ressources</li>
+                </ol>
+
+                <h3>3. Appel de l'API protégée</h3>
+                <div class="code-block">curl -X GET https://api.example.com/protected \
+  -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6..."</div>
+
+                <div class="tech-stack">
+                    <span class="tech-tag">Bearer Token</span>
+                    <span class="tech-tag">JWT</span>
+                    <span class="tech-tag">OAuth2</span>
+                </div>
+            </section>
+
+            <!-- Analyse -->
+            <section class="section">
+                <h2>🔍 Partie 5 – Analyse et compréhension</h2>
+                
+                <h3>1. Différence entre OAuth2 et OpenID Connect</h3>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>OAuth2</h4>
+                        <p>Protocole d'<strong>autorisation</strong> permettant à une application d'accéder à des ressources sans transmettre le mot de passe utilisateur.</p>
+                        <ul>
+                            <li>Délivre un <code>access_token</code></li>
+                            <li>Focus sur l'autorisation d'accès</li>
+                            <li>Délégation de permissions</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h4>OpenID Connect (OIDC)</h4>
+                        <p>Couche d'<strong>authentification</strong> au-dessus d'OAuth2. Permet de vérifier l'identité de l'utilisateur.</p>
+                        <ul>
+                            <li>Délivre un <code>id_token</code> (JWT)</li>
+                            <li>Contient les infos d'identité</li>
+                            <li>SSO et fédération d'identités</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>2. Contenu d'un JWT (JSON Web Token)</h3>
+                <p>Un JWT est composé de trois parties séparées par des points :</p>
+                
+                <div class="info-box">
+                    <h4>Structure d'un JWT</h4>
+                    <p><strong>Header</strong> : Spécifie l'algorithme de signature et le type du jeton (ex: RS256)</p>
+                    <p><strong>Payload</strong> : Contient les <em>claims</em> - données sur l'utilisateur, ses rôles, permissions, expiration, etc.</p>
+                    <p><strong>Signature</strong> : Permet de valider l'intégrité du jeton et garantit qu'il n'a pas été modifié</p>
+                </div>
+
+                <div class="code-block">eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFsaWNlIiwicm9sZXMiOlsidXNlciJdfQ.
+SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</div>
+
+                <h3>3. Vérification des permissions par Keycloak</h3>
+                <p>Keycloak attribue à chaque utilisateur authentifié un <strong>JWT (access_token)</strong> contenant :</p>
+                <ul>
+                    <li>L'identité de l'utilisateur (sub, email, nom)</li>
+                    <li>Ses rôles (user, admin, etc.)</li>
+                    <li>Ses permissions et scopes</li>
+                    <li>La date d'expiration du token</li>
+                </ul>
+
+                <p>Les applications ou APIs consultent ce token pour déterminer si l'utilisateur possède les droits suffisants. La vérification se fait via :</p>
+                <ol>
+                    <li>Décodage du JWT</li>
+                    <li>Vérification de la signature</li>
+                    <li>Contrôle de l'expiration</li>
+                    <li>Inspection des rôles et claims</li>
+                </ol>
+            </section>
+
+            <!-- Résumé Keycloak -->
+            <section class="section">
+                <h2>📚 Résumé : Keycloak en profondeur</h2>
+                
+                <h3>1️⃣ Keycloak – C'est quoi ?</h3>
+                <p>Keycloak est une solution open-source de <strong>gestion des identités et des accès (IAM)</strong>. Il permet de centraliser l'authentification et l'autorisation des utilisateurs pour diverses applications web, API ou mobiles.</p>
+
+                <div class="success-box">
+                    <h4>Fonctionnalités principales</h4>
+                    <ul>
+                        <li><strong>Authentification centralisée</strong> : SSO - une seule connexion pour toutes les apps</li>
+                        <li><strong>Gestion des utilisateurs</strong> : CRUD complet, rôles et groupes</li>
+                        <li><strong>Protocoles standards</strong> : OAuth2, OpenID Connect, SAML 2.0</li>
+                        <li><strong>Sécurité avancée</strong> : 2FA, WebAuthn, OTP</li>
+                        <li><strong>Fédération d'identités</strong> : Connexion via Google, Facebook, Azure AD</li>
+                        <li><strong>Jetons JWT</strong> : Sécurisation des échanges client-serveur</li>
+                    </ul>
+                </div>
+
+                <h3>2️⃣ Comment l'utiliser ?</h3>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>Étapes de configuration</h4>
+                        <ol>
+                            <li>Installation (Docker, serveur)</li>
+                            <li>Création d'un Realm</li>
+                            <li>Gestion des utilisateurs</li>
+                            <li>Création des rôles</li>
+                            <li>Configuration des clients</li>
+                            <li>Test et intégration</li>
+                        </ol>
+                    </div>
+
+                    <div class="card">
+                        <h4>Types de clients</h4>
+                        <ul>
+                            <li><strong>Public</strong> : Mobile, SPA (sans secret)</li>
+                            <li><strong>Confidentiel</strong> : Backend, API (avec secret)</li>
+                            <li>Flows OAuth2 configurables</li>
+                            <li>Support PKCE pour sécurité renforcée</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>3️⃣ Pourquoi l'utiliser ?</h3>
+                <div class="tech-stack">
+                    <span class="tech-tag">Centralisation</span>
+                    <span class="tech-tag">Sécurité</span>
+                    <span class="tech-tag">SSO</span>
+                    <span class="tech-tag">Standards</span>
+                    <span class="tech-tag">Scalabilité</span>
+                </div>
+
+                <ul>
+                    <li>✅ <strong>Centralisation</strong> : Un système d'auth unique pour toutes les apps</li>
+                    <li>✅ <strong>Sécurité renforcée</strong> : Mots de passe jamais partagés, support 2FA</li>
+                    <li>✅ <strong>Contrôle fin</strong> : Gestion granulaire des permissions</li>
+                    <li>✅ <strong>Interopérabilité</strong> : Standards OAuth2, OIDC, SAML</li>
+                    <li>✅ <strong>Expérience utilisateur</strong> : SSO simplifie la vie des utilisateurs</li>
+                    <li>✅ <strong>Scalabilité</strong> : Parfait pour microservices et grandes infrastructures</li>
+                </ul>
+
+                <h3>4️⃣ Où l'utiliser ?</h3>
+                <p>Keycloak est adapté pour :</p>
+                <ul>
+                    <li>Entreprises avec multiples applications internes/externes</li>
+                    <li>Projets nécessitant SSO pour améliorer sécurité et UX</li>
+                    <li>Applications mobiles ou web avec APIs sécurisées</li>
+                    <li>Scénarios où des tiers doivent accéder à des ressources</li>
+                    <li>Organisations nécessitant rôles, permissions et audit centralisés</li>
+                </ul>
+            </section>
+
+            <!-- Intégration -->
+            <section class="section">
+                <h2>🔄 Intégration de Keycloak dans votre infrastructure</h2>
+                
+                <h3>Étapes d'intégration</h3>
+                <ol>
+                    <li><strong>Déploiement</strong> : Installation sur serveur ou conteneur Docker</li>
+                    <li><strong>Création Realm</strong> : Espace isolé pour vos applications</li>
+                    <li><strong>Utilisateurs & Rôles</strong> : Configuration des comptes et permissions</li>
+                    <li><strong>Enregistrement des clients</strong> :
+                        <ul>
+                            <li>Public : Front-end (SPA, mobile)</li>
+                            <li>Confidentiel : Backend, API</li>
+                        </ul>
+                    </li>
+                    <li><strong>Configuration OAuth2/OIDC</strong> : Authorization Code, PKCE, Client Credentials</li>
+                    <li><strong>Intégration applicative</strong> : Utilisation des libs Keycloak ou OAuth2</li>
+                    <li><strong>Validation serveur</strong> : Vérification JWT, rôles, et droits</li>
+                    <li><strong>Gestion & Audit</strong> : Centralisation des accès et monitoring</li>
+                </ol>
+
+                <div class="info-box">
+                    <strong>💡 Conseil d'architecture</strong><br>
+                    Keycloak agit comme un serveur d'identité centralisé, interfacé avec vos applications via des protocoles standards. Cela simplifie la sécurité et l'administration de votre système informatique.
+                </div>
+            </section>
+
+            <!-- Conclusion -->
+            <section class="section">
+                <h2>🎯 Conclusion</h2>
+                <p>Ce mini LAB a permis de comprendre la mise en place d'un serveur d'identité Keycloak et l'intégration d'un système d'authentification centralisé basé sur les standards <strong>OAuth2</strong> et <strong>OpenID Connect</strong>.</p>
+
+                <p>La configuration des rôles, utilisateurs, clients et des flux PKCE permet d'assurer un <strong>haut niveau de sécurité</strong> tout en simplifiant la gestion des accès.</p>
+
+                <div class="success-box">
+                    <h4>✅ Compétences acquises</h4>
+                    <ul>
+                        <li>Installation et configuration de Keycloak</li>
+                        <li>Compréhension OAuth2 vs OpenID Connect</li>
+                        <li>Gestion des realms, utilisateurs et rôles</li>
+                        <li>Configuration de clients Public et Confidentiel</li>
+                        <li>Implémentation du flow PKCE</li>
+                        <li>Manipulation et validation de JWT</li>
+                        <li>Sécurisation d'APIs avec tokens</li>
+                    </ul>
+                </div>
+
+                <div class="tech-stack">
+                    <span class="tech-tag">Keycloak</span>
+                    <span class="tech-tag">OAuth2</span>
+                    <span class="tech-tag">OIDC</span>
+                    <span class="tech-tag">SSO</span>
+                    <span class="tech-tag">JWT</span>
+                    <span class="tech-tag">PKCE</span>
+                    <span class="tech-tag">IAM</span>
+                </div>
+            </section>
+
         </div>
-
-        <div class="content-section">
-            <h2>🏗️ Comment utiliser Keycloak dans votre infrastructure ?</h2>
-            
-            <ol class="steps">
-                <li>
-                    <strong>Déploiement de Keycloak</strong>
-                    <p>Installer Keycloak sur un serveur ou via un conteneur Docker, pour disposer d'une instance accessible par votre infrastructure.</p>
-                </li>
-                <li>
-                    <strong>Création d'un Realm</strong>
-                    <p>Configurer un realm, espace isolé pour gérer les utilisateurs, rôles et applications. Chaque realm représente un périmètre de sécurité distinct.</p>
-                </li>
-                <li>
-                    <strong>Définition des utilisateurs et rôles</strong>
-                    <p>Créer les comptes utilisateurs, définir leurs rôles et permissions, et configurer les actions requises.</p>
-                </li>
-                <li>
-                    <strong>Enregistrement des applications en tant que clients</strong>
-                    <p>Chaque application (web, mobile, API) est enregistrée dans Keycloak comme un client (public ou confidentiel).</p>
-                </li>
-                <li>
-                    <strong>Configuration des protocoles d'authentification</strong>
-                    <p>Utiliser les flows OAuth2 et OpenID Connect adaptés pour permettre aux applications d'obtenir des jetons.</p>
-                </li>
-                <li>
-                    <strong>Intégration dans les applications</strong>
-                    <p>Les applications utilisent les bibliothèques clientes Keycloak pour rediriger l'utilisateur, recevoir les tokens JWT, et valider l'identité.</p>
-                </li>
-                <li>
-                    <strong>Validation côté serveur</strong>
-                    <p>Les APIs et serveurs valident les tokens JWT reçus, vérifient la signature et les rôles d'accès avant d'autoriser les requêtes.</p>
-                </li>
-            </ol>
-        </div>
-
-        <div class="content-section">
-            <h2>✅ Conclusion</h2>
-            <div class="success-box">
-                <p>
-                    Ce mini LAB nous a permis de comprendre la mise en place d'un serveur d'identité Keycloak et l'intégration 
-                    d'un système d'authentification centralisé basé sur les standards <strong>OAuth2</strong> et <strong>OpenID Connect</strong>. 
-                    La configuration des rôles, utilisateurs, clients et des flux PKCE permet d'assurer un haut niveau de sécurité 
-                    tout en simplifiant la gestion des accès.
-                </p>
-                <p>
-                    Cette approche montre comment Keycloak agit comme un serveur d'identité et d'autorisation centralisé, 
-                    interfacé avec des applications via des protocoles standards, simplifiant la sécurité et l'administration 
-                    de votre système informatique.
-                </p>
-            </div>
-        </div>
-
-        <footer>
-            <p>© 2024 - Portfolio Technique | <a href="../index.html" style="color: white; text-decoration: underline;">Retour au portfolio</a></p>
-        </footer>
     </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024-2025 Ousmane DEME | <a href="../index.html">Portfolio</a> | <a href="https://www.linkedin.com/in/ousmane-deme1618" target="_blank">LinkedIn</a></p>
+    </footer>
+
 </body>
 </html>
