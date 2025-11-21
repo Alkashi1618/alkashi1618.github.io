@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiCE CTF Crypto Challenge</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+    <style>
+        body { margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .challenge-completed { background: linear-gradient(45deg, #10b981, #059669) !important; }
+        .task-locked { opacity: 0.6; filter: grayscale(1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const Trophy = ({ className }) => (<svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 21h8m-4-4v4m-5-9V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1m-10 4h10a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z"/></svg>);
+        const Flag = ({ className }) => (<svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>);
+        const Sparkles = ({ className }) => (<svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/></svg>);
+        const Leaderboard = ({ className }) => (<svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>);
+
+        const CryptoChallengePlatform = () => {
+            const AES_KEY = "fX90NCwaoeQZHP8v4Sm+ZWdKAUbSPaen+Rd61SLKqc8=";
+            const AES_ENCRYPTED = "NLiY9ykfdsKD/7DLjnVuXGx2xmeIyw6VAMEAXmzcZZyPyhK7jF4aZnaiIk2E35nqKXdfbOjKEnHJ1k5emAOXDA==";
+            const AES_SOLUTION = "La perseverance est la cle du succes";
+
+            const getInitialState = () => {
+                const saved = localStorage.getItem('wiceCTFChallenge');
+                if (saved) return JSON.parse(saved);
+                return {
+                    currentTask: 1,
+                    completedTasks: [],
+                    userInputs: { task1: '', task2: '', task3: '', task4: '', task5: '' },
+                    finalMessage: '',
+                    score: 0,
+                    startTime: Date.now(),
+                    teamName: ''
+                };
+            };
+
+            const [challengeState, setChallengeState] = useState(getInitialState);
+            const [activeTab, setActiveTab] = useState('challenge');
+            const [showTeamModal, setShowTeamModal] = useState(!challengeState.teamName);
+            const [teamInput, setTeamInput] = useState('');
+
+            useEffect(() => {
+                localStorage.setItem('wiceCTFChallenge', JSON.stringify(challengeState));
+            }, [challengeState]);
+
+            const tasks = [
+                {
+                    id: 1,
+                    title: "🔓 César - Le Commencement",
+                    description: "Déchiffrez ce premier message codé avec un décalage César. La clé est 13 (ROT13):",
+                    challenge: "Jvpr PGS rfg har pbzcrgvgvba cnffvbaanagr",
+                    hint: "ROT13: chaque lettre est décalée de 13 positions. A→N, B→O, etc.",
+                    solution: "Wice CTF est une competition passionnante",
+                    type: "cesar",
+                    points: 100
+                },
+                {
+                    id: 2,
+                    title: "🔑 Vigenère - La Poly-alphabétique",
+                    description: "Déchiffrez ce message Vigenère avec la clé 'WICE':",
+                    challenge: "hi evuxvs aav pw kniba wppqoi",
+                    hint: "Répétez la clé WICEWICEWICE... et soustrayez chaque lettre",
+                    solution: "La crypto est la clefs ultime",
+                    type: "vigenere",
+                    points: 150
+                },
+                {
+                    id: 3,
+                    title: "🧮 Affine - Les Mathématiques Secrètes",
+                    description: "Déchiffrez ce message Affine avec a=5 et b=8:",
+                    challenge: "hcqqc syncp uep zcppc",
+                    hint: "L'inverse modulaire de 5 modulo 26 est 21. Formule: P = 21*(C-8) mod 26",
+                    solution: "Femme Cyber sur Terre",
+                    type: "affine",
+                    points: 200
+                },
+                {
+                    id: 4,
+                    title: "⚡ AES - La Modernité",
+                    description: "Pour ce défi AES, utilisez le CryptoLab pour déchiffrer avec la clé fournie:",
+                    challenge: "NLiY9ykfdsKD/7DLjnVuXGx2xmeIyw6VAMEAXmzcZZyPyhK7jF4aZnaiIk2E35nqKXdfbOjKEnHJ1k5emAOXDA==",
+                    hint: "Clé AES (Base64): fX90NCwaoeQZHP8v4Sm+ZWdKAUbSPaen+Rd61SLKqc8= - Utilisez l'onglet 'Moderne' du CryptoLab",
+                    solution: "La perseverance est la cle du succes",
+                    type: "aes",
+                    points: 300
+                },
+                {
+                    id: 5,
+                    title: "🔒 RSA - Le Graal Final",
+                    description: "Pour ce défi final, répondez à cette question: Quel est le message de félicitations pour les participantes du WiCE CTF?",
+                    challenge: "Indice: Le message commence par 'Bravo' et encourage les femmes en cybersécurité",
+                    hint: "Pensez à un message d'encouragement pour les femmes dans la tech!",
+                    solution: "Bravo les femmes en cybersecurite",
+                    type: "rsa",
+                    points: 500
+                }
+            ];
+
+            const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+            const normalizeString = (str) => {
+                return str.toLowerCase()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[^a-z0-9\s]/g, '')
+                    .trim();
+            };
+
+            const dechiffrementCesar = (text, key) => {
+                let result = '';
+                for (let i = 0; i < text.length; i++) {
+                    const index = letters.indexOf(text[i]);
+                    if (index !== -1) {
+                        const isUpper = index >= 26;
+                        const baseIndex = isUpper ? index - 26 : index;
+                        const newIndex = (baseIndex + 26 - (key % 26)) % 26;
+                        result += isUpper ? letters[newIndex + 26] : letters[newIndex];
+                    } else {
+                        result += text[i];
+                    }
+                }
+                return result;
+            };
+
+            const dechiffrementVigenere = (text, key) => {
+                let result = '';
+                let j = 0;
+                const keyLower = key.toLowerCase();
+                for (let i = 0; i < text.length; i++) {
+                    const index = letters.indexOf(text[i]);
+                    if (index !== -1) {
+                        const isUpper = index >= 26;
+                        const baseIndex = isUpper ? index - 26 : index;
+                        const keyIndex = letters.indexOf(keyLower[j % keyLower.length]);
+                        const newIndex = (baseIndex + 26 - keyIndex) % 26;
+                        result += isUpper ? letters[newIndex + 26] : letters[newIndex];
+                        j++;
+                    } else {
+                        result += text[i];
+                    }
+                }
+                return result;
+            };
+
+            const inverseModulaire = (a, m) => {
+                for (let i = 1; i < m; i++) {
+                    if ((a * i) % m === 1) return i;
+                }
+                return null;
+            };
+
+            const dechiffrementAffine = (text, a, b) => {
+                const aInv = inverseModulaire(a, 26);
+                if (aInv === null) return null;
+                let result = '';
+                for (let i = 0; i < text.length; i++) {
+                    const index = letters.indexOf(text[i]);
+                    if (index !== -1) {
+                        const isUpper = index >= 26;
+                        const baseIndex = isUpper ? index - 26 : index;
+                        const newIndex = (aInv * (baseIndex - b + 26)) % 26;
+                        result += isUpper ? letters[newIndex + 26] : letters[newIndex];
+                    } else {
+                        result += text[i];
+                    }
+                }
+                return result;
+            };
+
+            const handleTaskSubmit = (taskId) => {
+                const task = tasks.find(t => t.id === taskId);
+                const userAnswer = challengeState.userInputs[`task${taskId}`].trim();
+                const normalizedAnswer = normalizeString(userAnswer);
+                const normalizedSolution = normalizeString(task.solution);
+                
+                let isCorrect = normalizedAnswer === normalizedSolution;
+
+                if (!isCorrect) {
+                    switch(task.type) {
+                        case 'cesar':
+                            const cesarResult = dechiffrementCesar(task.challenge, 13);
+                            isCorrect = normalizeString(cesarResult) === normalizedAnswer;
+                            break;
+                        case 'vigenere':
+                            const vigenereResult = dechiffrementVigenere(task.challenge, 'WICE');
+                            isCorrect = normalizeString(vigenereResult) === normalizedAnswer;
+                            break;
+                        case 'affine':
+                            const affineResult = dechiffrementAffine(task.challenge, 5, 8);
+                            isCorrect = normalizeString(affineResult) === normalizedAnswer;
+                            break;
+                    }
+                }
+
+                if (isCorrect) {
+                    const newCompletedTasks = [...new Set([...challengeState.completedTasks, taskId])];
+                    const newScore = challengeState.score + task.points;
+                    const newCurrentTask = taskId < 5 ? taskId + 1 : 5;
+                    
+                    setChallengeState(prev => ({
+                        ...prev,
+                        completedTasks: newCompletedTasks,
+                        currentTask: newCurrentTask,
+                        score: newScore,
+                        finalMessage: taskId === 5 ? "🎉 Félicitations! Vous avez terminé tous les défis!" : prev.finalMessage
+                    }));
+
+                    setTimeout(() => alert(`🎉 Tâche ${taskId} réussie! +${task.points} points`), 100);
+                } else {
+                    alert('❌ Réponse incorrecte. Vérifiez votre solution et réessayez!');
+                }
+            };
+
+            const handleInputChange = (taskId, value) => {
+                setChallengeState(prev => ({
+                    ...prev,
+                    userInputs: { ...prev.userInputs, [`task${taskId}`]: value }
+                }));
+            };
+
+            const resetChallenge = () => {
+                if (confirm('Êtes-vous sûr de vouloir réinitialiser?')) {
+                    setChallengeState({
+                        currentTask: 1, completedTasks: [],
+                        userInputs: { task1: '', task2: '', task3: '', task4: '', task5: '' },
+                        finalMessage: '', score: 0, startTime: Date.now(),
+                        teamName: challengeState.teamName
+                    });
+                }
+            };
+
+            const setTeamName = () => {
+                if (teamInput.trim()) {
+                    setChallengeState(prev => ({ ...prev, teamName: teamInput.trim() }));
+                    setShowTeamModal(false);
+                }
+            };
+
+            const calculateTimeSpent = () => {
+                const timeDiff = Date.now() - challengeState.startTime;
+                const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+                const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                return `${hours}h ${minutes}m`;
+            };
+
+            const currentTaskData = tasks.find(task => task.id === challengeState.currentTask);
+            const progressPercentage = (challengeState.completedTasks.length / tasks.length) * 100;
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-purple-950 via-pink-900 to-violet-950">
+                    {showTeamModal && (
+                        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                            <div className="bg-slate-800 rounded-xl p-8 max-w-md w-full border-2 border-purple-500">
+                                <h2 className="text-2xl font-bold text-white mb-4 text-center">🏆 WiCE CTF Crypto Challenge</h2>
+                                <p className="text-slate-300 mb-6 text-center">Entrez le nom de votre équipe pour commencer!</p>
+                                <input
+                                    type="text"
+                                    value={teamInput}
+                                    onChange={(e) => setTeamInput(e.target.value)}
+                                    placeholder="Nom de votre équipe..."
+                                    className="w-full bg-slate-700 text-white px-4 py-3 rounded-lg border border-purple-500/30 mb-4"
+                                    onKeyPress={(e) => e.key === 'Enter' && setTeamName()}
+                                />
+                                <button onClick={setTeamName} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold">
+                                    Commencer le Challenge
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="container mx-auto px-4 py-8 max-w-5xl">
+                        <div className="text-center mb-8">
+                            <div className="inline-flex items-center justify-center gap-4 mb-6 bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-4 rounded-2xl shadow-2xl">
+                                <Flag className="w-10 h-10 text-white animate-pulse" />
+                                <div>
+                                    <h1 className="text-3xl font-bold text-white">WiCE CTF Crypto Challenge</h1>
+                                    <p className="text-pink-200">Women in Cybersecurity Education - 2025</p>
+                                </div>
+                                <Sparkles className="w-10 h-10 text-yellow-300 animate-pulse" />
+                            </div>
+                            
+                            {challengeState.teamName && (
+                                <div className="bg-slate-800/50 rounded-xl p-4 inline-block border border-purple-500/30">
+                                    <p className="text-white font-semibold">
+                                        Équipe: <span className="text-pink-300">{challengeState.teamName}</span> | 
+                                        Score: <span className="text-green-400">{challengeState.score} pts</span> | 
+                                        Temps: <span className="text-blue-300">{calculateTimeSpent()}</span>
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="bg-slate-800/50 rounded-xl p-2 mb-6 border border-purple-500/30">
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    { id: 'challenge', name: '🏆 Challenge' },
+                                    { id: 'progress', name: '📊 Progression' },
+                                    { id: 'leaderboard', name: '🥇 Classement' }
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`py-3 px-4 rounded-lg font-semibold transition-all ${
+                                            activeTab === tab.id
+                                                ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white'
+                                                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+                                        }`}
+                                    >
+                                        {tab.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-800/50 rounded-xl p-6 border border-purple-500/30">
+                            {activeTab === 'challenge' && (
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-xl font-bold text-white">🎯 Défis Cryptographiques</h2>
+                                        <button onClick={resetChallenge} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">
+                                            🔄 Reset
+                                        </button>
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <div className="flex justify-between mb-2">
+                                            {tasks.map(task => (
+                                                <div key={task.id} className={`text-center flex-1 ${task.id > challengeState.currentTask ? 'opacity-50' : ''}`}>
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-1 text-sm font-bold ${
+                                                        challengeState.completedTasks.includes(task.id) 
+                                                            ? 'challenge-completed text-white' 
+                                                            : task.id === challengeState.currentTask
+                                                            ? 'bg-purple-600 text-white'
+                                                            : 'bg-slate-700 text-slate-400'
+                                                    }`}>
+                                                        {challengeState.completedTasks.includes(task.id) ? '✓' : task.id}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="bg-slate-700 rounded-full h-2">
+                                            <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all" style={{ width: `${progressPercentage}%` }}></div>
+                                        </div>
+                                        <p className="text-center text-slate-400 text-sm mt-1">{challengeState.completedTasks.length}/5 défis • {progressPercentage}%</p>
+                                    </div>
+
+                                    <div className="bg-slate-700/50 rounded-xl p-6 border-2 border-purple-500/50">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                                Défi {currentTaskData.id} • {currentTaskData.points} pts
+                                            </span>
+                                            <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
+                                                {currentTaskData.type.toUpperCase()}
+                                            </span>
+                                        </div>
+                                        
+                                        <h3 className="text-xl font-bold text-white mb-2">{currentTaskData.title}</h3>
+                                        <p className="text-slate-300 mb-4">{currentTaskData.description}</p>
+                                        
+                                        <div className="bg-black/40 p-4 rounded-lg mb-4 border border-green-500/30">
+                                            <code className="text-green-400 font-mono break-all">{currentTaskData.challenge}</code>
+                                        </div>
+
+                                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
+                                            <p className="text-blue-300 text-sm">💡 <strong>Indice:</strong> {currentTaskData.hint}</p>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            value={challengeState.userInputs[`task${challengeState.currentTask}`]}
+                                            onChange={(e) => handleInputChange(challengeState.currentTask, e.target.value)}
+                                            placeholder="Votre solution..."
+                                            className="w-full bg-slate-600 text-white px-4 py-3 rounded-lg border border-purple-500/50 mb-3"
+                                        />
+                                        <button
+                                            onClick={() => handleTaskSubmit(challengeState.currentTask)}
+                                            className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-3 rounded-lg font-bold hover:from-yellow-700 hover:to-orange-700"
+                                        >
+                                            ✅ VALIDER
+                                        </button>
+                                    </div>
+
+                                    {challengeState.finalMessage && (
+                                        <div className="bg-green-500/20 border-2 border-green-500 rounded-xl p-6 text-center">
+                                            <div className="text-5xl mb-4">🎉</div>
+                                            <h3 className="text-2xl font-bold text-green-300 mb-2">FÉLICITATIONS!</h3>
+                                            <p className="text-white text-lg mb-4">{challengeState.finalMessage}</p>
+                                            <p className="text-green-200">Score: <span className="text-yellow-300 font-bold">{challengeState.score} pts</span> • Temps: {calculateTimeSpent()}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'progress' && (
+                                <div className="space-y-6">
+                                    <h2 className="text-xl font-bold text-white mb-4">📊 Votre Progression</h2>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="bg-slate-700/50 rounded-xl p-4 border border-purple-500/30">
+                                            <h3 className="text-lg font-semibold text-white mb-3">📈 Statistiques</h3>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex justify-between"><span className="text-slate-300">Score:</span><span className="text-green-400 font-bold">{challengeState.score} pts</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-300">Défis:</span><span className="text-blue-400 font-bold">{challengeState.completedTasks.length}/5</span></div>
+                                                <div className="flex justify-between"><span className="text-slate-300">Temps:</span><span className="text-orange-400 font-bold">{calculateTimeSpent()}</span></div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-700/50 rounded-xl p-4 border border-purple-500/30">
+                                            <h3 className="text-lg font-semibold text-white mb-3">🎯 Défis</h3>
+                                            <div className="space-y-2">
+                                                {tasks.map(task => (
+                                                    <div key={task.id} className={`flex items-center justify-between p-2 rounded text-sm ${challengeState.completedTasks.includes(task.id) ? 'bg-green-500/20' : 'bg-slate-600/50'}`}>
+                                                        <span className="text-white">{task.id}. {task.type}</span>
+                                                        <span className={challengeState.completedTasks.includes(task.id) ? 'text-green-400' : 'text-slate-400'}>{task.points} pts</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'leaderboard' && (
+                                <div className="space-y-6">
+                                    <h2 className="text-xl font-bold text-white mb-4">🥇 Classement</h2>
+                                    <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">1</div>
+                                                <span className="text-white font-semibold">{challengeState.teamName || 'Votre Équipe'}</span>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-yellow-300 font-bold">{challengeState.score} pts</div>
+                                                <div className="text-slate-400 text-sm">{calculateTimeSpent()}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-slate-400 text-center text-sm">Le classement complet sera disponible lors de l'événement</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="text-center text-purple-300 mt-6 pb-4">
+                            <p className="mb-1">💜 Women in Cybersecurity Education - CTF 2025</p>
+                            <p className="text-sm">
+                                <a href="https://wicectf2025crypto.vercel.app/" target="_blank" className="text-pink-300 hover:text-pink-400 underline">
+                                    Ouvrir le CryptoLab pour s'entraîner
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<CryptoChallengePlatform />, document.getElementById('root'));
+    </script>
+</body>
+</html>
